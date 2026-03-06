@@ -117,6 +117,10 @@ Optional HTTPS probe for a specific host:
 
 ## LocalStack provisioning
 
+Before running provisioning, you must create a `terraform.tfvars` file.
+Start from `terraform.tfvars.example` and set the values needed by your local
+infrastructure.
+
 `./server localstack setup` checks for `tflocal`.
 If missing, it can install required tooling with Homebrew:
 
@@ -125,12 +129,33 @@ brew tap hashicorp/tap
 brew install awscli hashicorp/tap/terraform terraform-local awscli-local
 ```
 
-Copy `terraform.tfvars.example` to `terraform.tfvars`, fill required values,
-then run:
+What this command does:
+
+The Terraform in this repo provisions AWS-like resources in LocalStack (for
+example S3/SQS/Lambda-related infrastructure used by local development flows).
+
+Run provisioning with:
 
 ```bash
+./server start localstack
 ./server localstack setup
 ```
+
+Useful options:
+
+- `./server localstack setup --no-init`
+- `./server localstack setup --vars ./terraform.tfvars`
+- `./server localstack setup --yes`
+
+After provisioning, verify with:
+
+```bash
+awslocal s3 ls
+awslocal sqs list-queues
+```
+
+Detailed Terraform module documentation:
+[scripts/terraform/README.md](./scripts/terraform/README.md)
 
 ## Custom services
 

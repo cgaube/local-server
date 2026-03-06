@@ -4,5 +4,5 @@ include:
   - services/localstack/docker-compose.yml
 networks:
   default:
-    name: shared_network
+    name: local_server_proxy_net
     driver: bridge
