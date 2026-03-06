@@ -1,0 +1,3 @@
+include:
+  - services/web/docker-compose.yml
+  - custom/[YOURSERVICES]/docker-compose.yml

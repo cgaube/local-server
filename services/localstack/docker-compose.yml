@@ -1,0 +1,23 @@
+services:
+  localstack:
+    container_name: 'localstack'
+    profiles: ['localstack']
+    image: localstack/localstack:latest
+    platform: linux/amd64
+    ports:
+      - '127.0.0.1:4566:4566' # LocalStack Gateway
+      - '127.0.0.1:4510-4559:4510-4559' # external services port range
+    environment:
+      - LOCALSTACK_API_KEY=
+      - DEBUG=0
+      - SERVICES=lambda,s3,s3control,sqs,apigateway,iam,dynamodb,secretsmanager,logs,sns
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DYNAMODB_REMOVE_EXPIRED_ITEMS=1
+      - ENABLE_CONFIG_UPDATES=1
+      - PERSISTENCE=0
+      - ALLOW_NONSTANDARD_REGIONS=1
+      - S3_SKIP_CHECKSUM_VALIDATION=1
+      - DISABLE_CUSTOM_CREDENTIALS_PROVIDERS=1
+    volumes:
+      - '../../volumes/localstack:/var/lib/localstack'
+      - '/var/run/docker.sock:/var/run/docker.sock'

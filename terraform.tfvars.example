@@ -1,0 +1,49 @@
+# Default resources to create
+
+# must be relative to ./scripts/terraform since the script runs from that directory.
+s3_buckets_folder = "../../localstack/s3/"
+
+sqs_queues = [
+  "default",
+  "test_queue"
+]
+
+dynamodb_tables = {
+  #default = { table = "default" }
+  test_table = {
+    index: "indexField"
+    ttl: "TTL"
+  }
+}
+
+# lambdas_functions = {
+#   lambda_name = {
+#     function_name = "lambda_function_name",
+#     source = "/path/to/lambda.zip"
+#     handler = "lambda.do_something"
+#     runtime = "ruby3.2"
+#   }
+# }
+
+# lambdas_functions_env = {
+#   lambda_name = {
+#     ENV_VARIABLE = "value"
+#     ENV_VARIABLE_B = "value"
+#   }
+# }
+
+# To be added to secret manager
+# secrets_binary = {
+#   secret-name = "SECRET_VALUE"
+# }
+#
+# secrets_string = {
+#   test-secret = "Test"
+# }
+#
+# secrets_json = {
+#   test-object = {
+#     key1 = "value1"
+#     key2 = "value2"
+#   }
+# }

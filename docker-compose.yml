@@ -1,0 +1,8 @@
+name: local-server
+include:
+  - services/proxy/docker-compose.yml
+  - services/localstack/docker-compose.yml
+networks:
+  default:
+    name: shared_network
+    driver: bridge

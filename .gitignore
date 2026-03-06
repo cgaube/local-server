@@ -1,0 +1,35 @@
+.idea/
+!.idea/scopes/Services.xml
+!.idea/scopes/fileColors.xml
+/volumes
+!/volumes/.keep
+/node_modules
+!**/*.keep
+/custom/
+!/custom/README.md
+/docker-compose.override.yml
+/localstack/
+!/localstack/.keep
+!/localstack/s3/default/.keep
+/terraform.tfvars
+# Local .terraform dir (provider plugins, backend configs, etc.)
+.terraform/
+# Terraform state files
+*.tfstate
+*.tfstate.backup
+# Crash logs (useful for debugging, but not for version control)
+crash.log
+# Plan output (can contain sensitive data)
+*.tfplan
+# Override files (local-only customizations)
+*.override.tf
+*.override.tf.json
+terraform.override.tf
+terraform.override.tf.json
+# CLI configuration files
+.terraformrc
+terraform.rc
+/commands/dist/
+localstack_providers_override.tf
+.env
+server
