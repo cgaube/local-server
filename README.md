@@ -179,7 +179,6 @@ Add service compose files in `custom/`, then include them in
 
 ```yaml
 include:
-  - custom/services-configuration/docker-compose.yml
   - custom/mysql-db/docker-compose.yml
 ```
 
