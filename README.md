@@ -115,14 +115,42 @@ Optional HTTPS probe for a specific host:
 ./server doctor --https -H my-service.dev.test
 ```
 
-## LocalStack provisioning
+## LocalStack
+
+### Setup 
+
+auth token setup:
+
+1. Create `.env` from `.env.example`.
+2. Set `LOCALSTACK_AUTH_TOKEN` in `.env`.
+
+Example:
+
+```bash
+cp .env.example .env
+# then edit .env and set:
+# LOCALSTACK_AUTH_TOKEN=your_api_key_here
+```
+
+### Provisioning (Terraform)
+
+#### Setup
 
 Before running provisioning, you must create a `terraform.tfvars` file.
 Start from `terraform.tfvars.example` and set the values needed by your local
 infrastructure.
 
+### Command 
+
+Run provisioning with:
+
+```bash
+./server start localstack # Localstack need to be running first
+./server localstack setup
+```
+
 `./server localstack setup` checks for `tflocal`.
-If missing, it can install required tooling with Homebrew:
+If missing, it can install the required tooling with Homebrew:
 
 ```bash
 brew tap hashicorp/tap
@@ -133,19 +161,6 @@ What this command does:
 
 The Terraform in this repo provisions AWS-like resources in LocalStack (for
 example S3/SQS/Lambda-related infrastructure used by local development flows).
-
-Run provisioning with:
-
-```bash
-./server start localstack
-./server localstack setup
-```
-
-Useful options:
-
-- `./server localstack setup --no-init`
-- `./server localstack setup --vars ./terraform.tfvars`
-- `./server localstack setup --yes`
 
 After provisioning, verify with:
 
@@ -164,6 +179,7 @@ Add service compose files in `custom/`, then include them in
 
 ```yaml
 include:
+  - custom/services-configuration/docker-compose.yml
   - custom/mysql-db/docker-compose.yml
 ```
 
