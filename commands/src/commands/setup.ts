@@ -10,6 +10,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'fs'
+import { homedir } from 'os'
 import { resolve, join } from 'path'
 import {
   ensureBrewInstalled,
@@ -79,6 +80,26 @@ const getBrewPrefix = async () => {
   }
 }
 
+const restartDnsmasqService = async (brewPrefix: string) => {
+  const brewBinary = join(brewPrefix, 'bin', 'brew')
+  const userLaunchAgentPath = join(
+    homedir(),
+    'Library',
+    'LaunchAgents',
+    'homebrew.mxcl.dnsmasq.plist',
+  )
+
+  if (existsSync(userLaunchAgentPath)) {
+    consola.warn(
+      `Found user LaunchAgent for dnsmasq at ${userLaunchAgentPath}. Root-managed dnsmasq works more reliably on macOS.`,
+    )
+  }
+
+  await execa('sudo', [brewBinary, 'services', 'restart', 'dnsmasq'], {
+    stdio: 'inherit',
+  })
+}
+
 const setupMacWildcardResolver = async (rootDomain: string) => {
   const brewPrefix = await getBrewPrefix()
   if (!brewPrefix) {
@@ -98,9 +119,7 @@ const setupMacWildcardResolver = async (rootDomain: string) => {
 
   writeFileSync(dnsmasqConfigPath, dnsmasqConfig, 'utf8')
 
-  await execa('brew', ['services', 'restart', 'dnsmasq'], {
-    stdio: 'inherit',
-  })
+  await restartDnsmasqService(brewPrefix)
 
   const resolverBody = ['nameserver 127.0.0.1', 'port 53535', ''].join('\n')
   const resolverTmpPath = join('/tmp', `local-server-resolver-${rootDomain}`)
