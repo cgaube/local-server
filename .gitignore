@@ -33,3 +33,4 @@ terraform.rc
 localstack_providers_override.tf
 .env
 server
+/services/proxy/certs/
