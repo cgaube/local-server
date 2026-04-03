@@ -91,8 +91,9 @@ const restartDnsmasqService = async (brewPrefix: string) => {
 
   if (existsSync(userLaunchAgentPath)) {
     consola.warn(
-      `Found user LaunchAgent for dnsmasq at ${userLaunchAgentPath}. Root-managed dnsmasq works more reliably on macOS.`,
+      `Found user LaunchAgent for dnsmasq at ${userLaunchAgentPath}. Stopping it before starting root-managed service.`,
     )
+    await execa('brew', ['services', 'stop', 'dnsmasq'], { stdio: 'inherit' })
   }
 
   await execa('sudo', [brewBinary, 'services', 'restart', 'dnsmasq'], {
