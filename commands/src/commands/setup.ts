@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from 'fs'
 import { homedir } from 'os'
-import { resolve, join } from 'path'
+import { dirname, resolve, join } from 'path'
 import {
   ensureBrewInstalled,
   hasCommand,
@@ -21,8 +21,9 @@ import {
 
 const DEFAULT_DOMAIN_SUFFIX = '.dev.test'
 const RECOMMENDED_DOMAIN_SUFFIX = '.dev.test'
-const ENV_PATH = resolve('.env')
-const CERTS_DIR = resolve('services/proxy/certs')
+const PROJECT_ROOT = dirname(process.execPath)
+const ENV_PATH = resolve(PROJECT_ROOT, '.env')
+const CERTS_DIR = resolve(PROJECT_ROOT, 'services/proxy/certs')
 
 const normalizeDomainSuffix = (value: string) => {
   const trimmed = value.trim().toLowerCase()
@@ -45,7 +46,7 @@ const upsertEnvValue = (filePath: string, key: string, value: string) => {
     return
   }
 
-  const lines = readFileSync(filePath, 'utf8').split('\n')
+  const lines = readFileSync(filePath, 'utf8').trimEnd().split('\n')
   const index = lines.findIndex((line) => line.startsWith(`${key}=`))
 
   if (index >= 0) {
@@ -93,7 +94,11 @@ const restartDnsmasqService = async (brewPrefix: string) => {
     consola.warn(
       `Found user LaunchAgent for dnsmasq at ${userLaunchAgentPath}. Stopping it before starting root-managed service.`,
     )
-    await execa('brew', ['services', 'stop', 'dnsmasq'], { stdio: 'inherit' })
+    try {
+      await execa('brew', ['services', 'stop', 'dnsmasq'], { stdio: 'inherit' })
+    } catch {
+      consola.warn('Failed to stop user dnsmasq service, continuing anyway.')
+    }
   }
 
   await execa('sudo', [brewBinary, 'services', 'restart', 'dnsmasq'], {
@@ -348,7 +353,7 @@ export const setupCommand = new Command('setup')
         const oldCertExists =
           existsSync(oldCertPaths.certFile) || existsSync(oldCertPaths.keyFile)
         if (oldCertExists) {
-          let removeOldCerts = false
+          let removeOldCerts = options.yes
           if (!options.yes) {
             const answer = await inquirer.prompt([
               {
