@@ -1,3 +1,6 @@
 include:
-  - services/web/docker-compose.yml
+  # 1) Select between Localstack or ministack
+  # - services/localstack/docker-compose.yml
+  # - services/ministack/docker-compose.yml
+  # 2) Include any other custom services you want
   - custom/[YOURSERVICES]/docker-compose.yml

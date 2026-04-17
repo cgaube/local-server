@@ -8,9 +8,10 @@
 /custom/
 !/custom/README.md
 /docker-compose.override.yml
-/localstack/
-!/localstack/.keep
-!/localstack/s3/default/.keep
+/awslocal/**
+!/awslocal/README.md
+!/awslocal/**/
+!/awslocal/**/.keep
 /terraform.tfvars
 # Local .terraform dir (provider plugins, backend configs, etc.)
 .terraform/

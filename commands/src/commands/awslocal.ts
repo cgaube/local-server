@@ -15,11 +15,11 @@ import {
 const TERRAFORM_DIR = resolve('scripts/terraform')
 const DEFAULT_TFVARS = resolve('terraform.tfvars')
 
-export const localstackCommand = new Command('localstack').description(
-  'Manage localstack environment',
+export const awslocalCommand = new Command('awslocal').description(
+  'Manage awslocal environment',
 )
 
-localstackCommand
+awslocalCommand
   .command('setup')
   .description('Setup localstack resources using Terraform')
   .option('-v, --vars <path>', 'Path to terraform.tfvars file', DEFAULT_TFVARS)
@@ -33,7 +33,7 @@ localstackCommand
       // Ensure localstack tooling is installed
       if (!(await hasCommand('tflocal'))) {
         await ensureBrewInstalled(
-          'Homebrew is required to install localstack terraform tooling.',
+          'Homebrew is required to install terraform tooling.',
         )
 
         consola.info('Missing required command: tflocal')
@@ -49,8 +49,7 @@ localstackCommand
             {
               type: 'confirm',
               name: 'install',
-              message:
-                'Install localstack terraform tooling with Homebrew now?',
+              message: 'Install terraform tooling with Homebrew now?',
               default: true,
             },
           ])
@@ -58,9 +57,7 @@ localstackCommand
         }
 
         if (!installConfirmed) {
-          throw new Error(
-            'Missing tflocal. Install tooling and re-run localstack setup.',
-          )
+          throw new Error('Missing tflocal. Install tooling and re-run setup.')
         }
 
         consola.info('Adding Homebrew tap: hashicorp/tap')
@@ -92,7 +89,7 @@ localstackCommand
         process.exit(1)
       }
 
-      consola.info('Setting up localstack resources...')
+      consola.info('Setting up resources...')
       consola.info(`Using terraform vars from: ${relativePath}`)
 
       // Execute terraform init first to ensure workspace is initialized
@@ -109,7 +106,7 @@ localstackCommand
         TERRAFORM_DIR,
       )
 
-      consola.success('Localstack resources setup completed successfully')
+      consola.success('Resources setup completed successfully')
     } catch (error) {
       consola.error('Error setting up localstack resources:', error)
       process.exit(1)

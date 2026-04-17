@@ -1,7 +1,7 @@
-# LocalStack Terraform
+# Terraform
 
-This folder contains Terraform code used by `./server localstack setup` to
-provision local AWS-like resources in LocalStack.
+This folder contains Terraform code used by `./server awslocal setup` to
+provision local AWS-like resources in local LocalStack or Ministack
 
 ## What Gets Provisioned
 
@@ -16,6 +16,6 @@ The root module wires component modules under `components/` and can create:
 ## Prerequisites
 
 - Docker running
-- LocalStack running (`./server start localstack`)
+- LocalStack or Ministack running (`./server start awslocal`)
 - Terraform tooling available (`tflocal`)
 - A project-level `terraform.tfvars` file in the repo root

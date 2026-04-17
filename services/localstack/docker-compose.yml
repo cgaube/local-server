@@ -1,7 +1,8 @@
+# This is deprecated
 services:
   localstack:
     container_name: 'localstack'
-    profiles: ['localstack']
+    profiles: ['awslocal']
     image: localstack/localstack-pro:latest
     platform: linux/amd64
     ports:

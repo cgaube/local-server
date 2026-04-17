@@ -41,10 +41,10 @@ Start default profile (`proxy`):
 ./server start
 ```
 
-Start LocalStack only:
+Start AWS local services:
 
 ```bash
-./server start localstack
+./server start awslocal
 ```
 
 Stop services:
@@ -68,7 +68,7 @@ List available profiles:
 - `./server config [profile]` print resolved docker compose config
 - `./server setup` configure local domain + cert + DNS resolver
 - `./server doctor` run local DNS/cert/proxy diagnostics
-- `./server localstack setup` provision LocalStack resources with Terraform
+- `./server awslocal setup` provision AWS local resources with Terraform
 
 ## Local domain and HTTPS setup
 
@@ -115,41 +115,46 @@ Optional HTTPS probe for a specific host:
 ./server doctor --https -H my-service.dev.test
 ```
 
-## LocalStack
+## AWS Local
 
-### Setup 
+The `awslocal` profile is the unified entry point for AWS-compatible local
+services (LocalStack, Ministack, or any compatible alternative).
 
-auth token setup:
+### Selecting a backend
 
-1. Create `.env` from `.env.example`.
-2. Set `LOCALSTACK_AUTH_TOKEN` in `.env`.
+Choose your backend by including the relevant compose file in
+`docker-compose.override.yml`:
 
-Example:
+```yaml
+include:
+  - services/ministack/docker-compose.yml  # or your preferred backend
+```
+
+Any service that declares `profiles: ['awslocal']` will be started when you run:
 
 ```bash
-cp .env.example .env
-# then edit .env and set:
-# LOCALSTACK_AUTH_TOKEN=your_api_key_here
+./server start awslocal
 ```
+
+Only one backend should be active at a time.
 
 ### Provisioning (Terraform)
 
-#### Setup
+Before running provisioning, create a `terraform.tfvars` file from the example:
 
-Before running provisioning, you must create a `terraform.tfvars` file.
-Start from `terraform.tfvars.example` and set the values needed by your local
-infrastructure.
-
-### Command 
+```bash
+cp terraform.tfvars.example terraform.tfvars
+# edit terraform.tfvars and set values for your local infrastructure
+```
 
 Run provisioning with:
 
 ```bash
-./server start localstack # Localstack need to be running first
-./server localstack setup
+./server start awslocal  # backend must be running first
+./server awslocal setup
 ```
 
-`./server localstack setup` checks for `tflocal`.
+`./server awslocal setup` checks for `tflocal`.
 If missing, it can install the required tooling with Homebrew:
 
 ```bash
@@ -157,10 +162,8 @@ brew tap hashicorp/tap
 brew install awscli hashicorp/tap/terraform terraform-local awscli-local
 ```
 
-What this command does:
-
-The Terraform in this repo provisions AWS-like resources in LocalStack (for
-example S3/SQS/Lambda-related infrastructure used by local development flows).
+The Terraform in this repo provisions AWS-like resources locally (S3, SQS,
+Lambda, and related infrastructure used by local development flows).
 
 After provisioning, verify with:
 
@@ -174,12 +177,13 @@ Detailed Terraform module documentation:
 
 ## Custom services
 
-Add service compose files in `custom/`, then include them in
+Include any compose file from anywhere on the filesystem in
 `docker-compose.override.yml`:
 
 ```yaml
 include:
   - custom/mysql-db/docker-compose.yml
+  - /absolute/path/to/other-service/docker-compose.yml
 ```
 
 Start with:
