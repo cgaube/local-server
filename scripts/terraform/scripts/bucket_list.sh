@@ -27,6 +27,7 @@ if [[ -n "$directory" && -d "$directory" ]]; then
   for date in $creationDates; do
     if [[ -n "$date" ]]; then
       fixed_date=${date/+00:00/Z}
+      fixed_date=$(echo "$fixed_date" | sed 's/\.[0-9]*Z$/Z/')
       epoch=$(date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$fixed_date" +"%s")
       if (( epoch > latestCreation )); then
         latestCreation=$epoch
