@@ -63,8 +63,8 @@ webhookGatewayCommand
 webhookGatewayCommand
   .command('receive')
   .description('Start ngrok for webhook forwarding')
-  .option('-u, --url <url>', 'ngrok url to use', 'cgaube6was.internal')
   .option('-p, --port <port>', 'port to forward to', '2999')
+  .option('-u, --url <url>', 'static domain for paid ngrok plans')
   .action(async (options) => {
     try {
       // Check if ngrok is installed first
@@ -72,11 +72,13 @@ webhookGatewayCommand
         process.exit(1)
       }
 
-      consola.info(`
-URL Will be https://${options.url}.blockcloud.ngrok.app}`)
-
+      const args = [
+        'http',
+        ...(options.url ? [`--url=${options.url}`] : []),
+        options.port,
+      ]
       consola.info(`Starting ngrok forwarding to port ${options.port}...`)
-      await execa('ngrok', ['http', `--url=${options.url}`, options.port], {
+      await execa('ngrok', args, {
         stdio: 'inherit',
       })
     } catch (error) {

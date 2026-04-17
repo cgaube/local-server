@@ -108,7 +108,7 @@ awslocalCommand
 
       consola.success('Resources setup completed successfully')
     } catch (error) {
-      consola.error('Error setting up localstack resources:', error)
+      consola.error('Error setting up resources:', error)
       process.exit(1)
     }
   })
