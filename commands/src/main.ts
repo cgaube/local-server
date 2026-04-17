@@ -23,7 +23,7 @@ import {
   doctorCommand,
   listCommand,
   setupCommand,
-  localstackCommand,
+  awslocalCommand,
   webhookGatewayCommand,
 } from './commands'
 
@@ -42,7 +42,7 @@ program
   .addCommand(doctorCommand)
   .addCommand(listCommand)
   .addCommand(setupCommand)
-  .addCommand(localstackCommand)
+  .addCommand(awslocalCommand)
   .addCommand(webhookGatewayCommand)
 
 program.parse()

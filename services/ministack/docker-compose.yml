@@ -1,0 +1,18 @@
+services:
+  ministack:
+    container_name: 'ministack'
+    profiles: ['awslocal']
+    image: nahuelnucera/ministack
+    platform: linux/amd64
+    ports:
+      - '4566:4566'
+    environment:
+      - GATEWAY_PORT=4566
+      - LOG_LEVEL=INFO
+      - PERSIST_STATE=0 # You should be using terraform instead
+      - S3_PERSIST=1
+      - RDS_PERSIST=1
+    volumes:
+      - ../../volumes/ministack/state:/tmp/ministack-state
+      - ../../volumes/ministack/s3:/tmp/ministack-data/s3
+      - /var/run/docker.sock:/var/run/docker.sock

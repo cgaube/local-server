@@ -11,8 +11,11 @@ export const execInDir = async (
   })
 }
 
-export const execDocker = async (args: string[]) => {
+export const execDocker = async (
+  args: string[],
+  { capture = false } = {},
+) => {
   return execa('docker', args, {
-    stdio: 'inherit',
+    stdio: capture ? 'pipe' : 'inherit',
   })
 }

@@ -1,7 +1,7 @@
 # Default resources to create
 
 # must be relative to ./scripts/terraform since the script runs from that directory.
-s3_buckets_folder = "../../localstack/s3/"
+s3_buckets_folder = "../../awslocal/s3/"
 
 sqs_queues = [
   "default",
