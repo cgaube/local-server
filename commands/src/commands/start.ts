@@ -1,43 +1,36 @@
 import { Command } from 'commander'
 import consola from 'consola'
-import { validateProfile } from '../utils/docker.js'
-import { execDocker } from '../utils/exec.js'
+import {
+  execDocker,
+  getDockerComposeProfileArgs,
+  resolveProfiles,
+} from '../utils'
 
 export const startCommand = new Command('start')
   .description('Start docker compose services')
-  .argument('[profile]', 'Docker compose profile to use', 'proxy')
+  .argument('[profiles...]', 'Docker compose profiles to use')
   .option('-f, --fresh', 'Pull latest images', false)
-  .action(async (profile: string, options) => {
+  .action(async (profiles: string[] = [], options) => {
     try {
-      if (!(await validateProfile(profile))) {
-        consola.error(
-          `Profile "${profile}" does not exist in any docker-compose file`,
-        )
-        process.exit(1)
-      }
+      const resolvedProfiles = await resolveProfiles(
+        profiles,
+        'Select services to start',
+      )
+      const profileArgs = getDockerComposeProfileArgs(resolvedProfiles)
+      const profileLabel = resolvedProfiles.join(', ')
 
-      // Check if we need to update
       if (options.fresh === true) {
-        // Pull latest images
-        consola.info(`Pulling latest images for profile: ${profile}`)
-        await execDocker(['compose', '--profile', profile, 'pull'])
+        consola.info(`Pulling latest images for profiles: ${profileLabel}`)
+        await execDocker(['compose', ...profileArgs, 'pull'])
         consola.success('Images pulled successfully')
 
-        // Clean up old images
         consola.info('Cleaning up old images...')
         await execDocker(['image', 'prune', '-f'])
         consola.success('Cleanup completed')
       }
 
-      consola.info(`Starting services with profile: ${profile}`)
-      await execDocker([
-        'compose',
-        '--profile',
-        profile,
-        'up',
-        '-d',
-        '--remove-orphans',
-      ])
+      consola.info(`Starting services with profiles: ${profileLabel}`)
+      await execDocker(['compose', ...profileArgs, 'up', '-d', '--remove-orphans'])
       consola.success('Services started successfully')
     } catch (error) {
       consola.error('Error starting services:', error)
