@@ -1,18 +1,12 @@
 import { Command } from 'commander'
 import consola from 'consola'
 import { execDocker } from '../../utils/exec.js'
-import {
-  isDockerRunning,
-  getAvailableProfiles,
-  getDockerComposeProfileArgs,
-} from '../../utils/docker.js'
+import { isDockerRunning } from '../../utils/docker.js'
 
 type Route = {
-  status: 'running' | 'declared'
   hosts: string[]
   name: string
   port: string
-  profile: string | null
 }
 
 const parseEnvArray = (env: string[] | undefined): Record<string, string> => {
@@ -26,28 +20,18 @@ const parseEnvArray = (env: string[] | undefined): Record<string, string> => {
   return result
 }
 
-const normalizeEnv = (
-  env: Record<string, string> | string[] | undefined,
-): Record<string, string> => {
-  if (!env) return {}
-  if (Array.isArray(env)) return parseEnvArray(env)
-  return env
-}
-
 const splitHosts = (value: string): string[] =>
   value
     .split(',')
     .map((host) => host.trim())
     .filter(Boolean)
 
-type RunningScan = {
+type Scan = {
   routes: Route[]
   proxyRunning: boolean
-  runningContainerNames: Set<string>
 }
 
-const collectRunningRoutes = async (): Promise<RunningScan> => {
-  const runningContainerNames = new Set<string>()
+const collectRoutes = async (): Promise<Scan> => {
   const routes: Route[] = []
   let proxyRunning = false
 
@@ -58,7 +42,7 @@ const collectRunningRoutes = async (): Promise<RunningScan> => {
     .filter(Boolean)
 
   if (ids.length === 0) {
-    return { routes, proxyRunning, runningContainerNames }
+    return { routes, proxyRunning }
   }
 
   const { stdout: inspectRaw } = await execDocker(['inspect', ...ids], {
@@ -72,7 +56,6 @@ const collectRunningRoutes = async (): Promise<RunningScan> => {
   for (const container of containers) {
     const name = (container.Name ?? '').replace(/^\//, '')
     if (!name) continue
-    runningContainerNames.add(name)
     if (name === 'nginx-proxy') proxyRunning = true
 
     const env = parseEnvArray(container.Config?.Env)
@@ -80,91 +63,31 @@ const collectRunningRoutes = async (): Promise<RunningScan> => {
     if (!virtualHost) continue
 
     routes.push({
-      status: 'running',
       hosts: splitHosts(virtualHost),
       name,
       port: env['VIRTUAL_PORT'] ?? '80',
-      profile: null,
     })
   }
 
-  return { routes, proxyRunning, runningContainerNames }
-}
-
-const collectDeclaredRoutes = async (
-  runningContainerNames: Set<string>,
-): Promise<Route[]> => {
-  const profiles = [...(await getAvailableProfiles())].sort()
-  if (profiles.length === 0) return []
-
-  const { stdout } = await execDocker(
-    [
-      'compose',
-      ...getDockerComposeProfileArgs(profiles),
-      'config',
-      '--format',
-      'json',
-    ],
-    { capture: true },
-  )
-
-  const config = JSON.parse(stdout ?? '{}') as {
-    services?: Record<
-      string,
-      {
-        container_name?: string
-        environment?: Record<string, string> | string[]
-        profiles?: string[]
-      }
-    >
-  }
-
-  const declared: Route[] = []
-  for (const [serviceName, service] of Object.entries(config.services ?? {})) {
-    const env = normalizeEnv(service.environment)
-    const virtualHost = env['VIRTUAL_HOST']
-    if (!virtualHost) continue
-
-    const containerName = service.container_name ?? serviceName
-    if (runningContainerNames.has(containerName)) continue
-
-    declared.push({
-      status: 'declared',
-      hosts: splitHosts(virtualHost),
-      name: serviceName,
-      port: env['VIRTUAL_PORT'] ?? '80',
-      profile: (service.profiles ?? []).join(',') || null,
-    })
-  }
-
-  return declared
+  return { routes, proxyRunning }
 }
 
 const renderRoutes = (routes: Route[]) => {
   const rows = routes.map((route) => ({
-    status: route.status,
     host: route.hosts.join(','),
-    name:
-      route.status === 'declared' && route.profile
-        ? `${route.name} (${route.profile})`
-        : route.name,
+    name: route.name,
     port: route.port,
     url: `https://${route.hosts[0]}`,
   }))
 
   const headers = {
-    status: 'STATUS',
     host: 'HOST',
-    name: 'SERVICE / CONTAINER',
+    name: 'CONTAINER',
     port: 'PORT',
     url: 'URL',
   }
 
   const widths = {
-    status: Math.max(
-      headers.status.length,
-      ...rows.map((r) => r.status.length),
-    ),
     host: Math.max(headers.host.length, ...rows.map((r) => r.host.length)),
     name: Math.max(headers.name.length, ...rows.map((r) => r.name.length)),
     port: Math.max(headers.port.length, ...rows.map((r) => r.port.length)),
@@ -172,7 +95,6 @@ const renderRoutes = (routes: Route[]) => {
 
   const format = (row: typeof headers) =>
     [
-      row.status.padEnd(widths.status),
       row.host.padEnd(widths.host),
       row.name.padEnd(widths.name),
       row.port.padEnd(widths.port),
@@ -186,7 +108,7 @@ const renderRoutes = (routes: Route[]) => {
 }
 
 export const routesCommand = new Command('routes')
-  .description('List proxy routes (running and compose-declared)')
+  .description('List active proxy routes from running containers')
   .action(async () => {
     try {
       if (!(await isDockerRunning())) {
@@ -194,17 +116,11 @@ export const routesCommand = new Command('routes')
         process.exit(1)
       }
 
-      const {
-        routes: running,
-        proxyRunning,
-        runningContainerNames,
-      } = await collectRunningRoutes()
-      const declared = await collectDeclaredRoutes(runningContainerNames)
-      const all = [...running, ...declared]
+      const { routes, proxyRunning } = await collectRoutes()
 
-      if (all.length === 0) {
+      if (routes.length === 0) {
         consola.info(
-          'No routes defined. Add VIRTUAL_HOST to a compose service to expose it.',
+          'No active routes. Start a container with VIRTUAL_HOST to expose it.',
         )
         return
       }
@@ -215,7 +131,7 @@ export const routesCommand = new Command('routes')
         )
       }
 
-      renderRoutes(all)
+      renderRoutes(routes)
     } catch (error) {
       consola.error('Error listing proxy routes:', error)
       process.exit(1)
