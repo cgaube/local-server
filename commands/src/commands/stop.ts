@@ -1,23 +1,26 @@
 import { Command } from 'commander'
 import consola from 'consola'
-import { validateProfile } from '../utils/docker.js'
-import { execDocker } from '../utils/exec.js'
+import {
+  execDocker,
+  getDockerComposeProfileArgs,
+  resolveProfiles,
+} from '../utils'
 
 export const stopCommand = new Command('stop')
   .description('Stop docker compose services')
   .alias('down')
-  .argument('[profile]', 'Docker compose profile to use', 'proxy')
-  .action(async (profile: string) => {
+  .argument('[profiles...]', 'Docker compose profiles to use')
+  .action(async (profiles: string[] = []) => {
     try {
-      if (!(await validateProfile(profile))) {
-        consola.error(
-          `Profile "${profile}" does not exist in any docker-compose file`,
-        )
-        process.exit(1)
-      }
+      const resolvedProfiles = await resolveProfiles(
+        profiles,
+        'Select services to stop',
+      )
+      const profileArgs = getDockerComposeProfileArgs(resolvedProfiles)
+      const profileLabel = resolvedProfiles.join(', ')
 
-      consola.info(`Stopping services with profile: ${profile}`)
-      await execDocker(['compose', '--profile', profile, 'down'])
+      consola.info(`Stopping services with profiles: ${profileLabel}`)
+      await execDocker(['compose', ...profileArgs, 'down'])
       consola.success('Services stopped successfully')
     } catch (error) {
       consola.error('Error stopping services:', error)

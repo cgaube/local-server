@@ -1,7 +1,7 @@
 /**
  *
  * This tool manages Docker Compose profiles with the following commands:
- * - server start [profile] -> Starts services with specified profile (default: 'proxy')
+ * - server start [profiles...] -> Starts services with specified profile(s), or prompts when none are passed
  * - server stop [profile] -> Stops services with specified profile (default: 'proxy')
  * - server status -> Shows status of compose services
  * - server config [profile] -> Shows resolved compose config for specified profile
