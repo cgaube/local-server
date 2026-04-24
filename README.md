@@ -68,6 +68,7 @@ List available profiles:
 - `./server config [profile]` print resolved docker compose config
 - `./server setup` configure local domain + cert + DNS resolver
 - `./server doctor` run local DNS/cert/proxy diagnostics
+- `./server proxy routes` list active proxy routes from running containers
 - `./server awslocal setup` provision AWS local resources with Terraform
 
 ## Local domain and HTTPS setup
@@ -100,6 +101,19 @@ services:
 Then access:
 
 `https://my-service.dev.test`
+
+## Proxy routes
+
+List every hostname the nginx proxy is currently exposing:
+
+```bash
+./server proxy routes
+```
+
+Every running container with a `VIRTUAL_HOST` env var shows up — whether it
+came from a compose profile in this project or was started some other way
+(`docker run`, another compose project, etc.). Output includes hostname(s),
+the container name, the upstream port, and the reachable URL.
 
 ## Doctor checks
 
