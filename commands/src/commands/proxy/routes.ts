@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import consola from 'consola'
-import { execDocker } from '../../utils/exec.js'
+import { execa } from 'execa'
 import { isDockerRunning } from '../../utils/docker.js'
 
 type Route = {
@@ -35,30 +35,24 @@ const collectRoutes = async (): Promise<Scan> => {
   const routes: Route[] = []
   let proxyRunning = false
 
-  const { stdout: idsRaw } = await execDocker(['ps', '-q'], { capture: true })
-  const ids = (idsRaw ?? '')
+  const { stdout } = await execa(
+    `docker ps -q | xargs --no-run-if-empty ` +
+      `docker inspect --format '{"Name":{{json .Name}},"Env":{{json .Config.Env}}}'`,
+    { shell: true },
+  )
+
+  const containers = stdout
+    .trim()
     .split('\n')
-    .map((id) => id.trim())
     .filter(Boolean)
-
-  if (ids.length === 0) {
-    return { routes, proxyRunning }
-  }
-
-  const { stdout: inspectRaw } = await execDocker(['inspect', ...ids], {
-    capture: true,
-  })
-  const containers = JSON.parse(inspectRaw ?? '[]') as Array<{
-    Name?: string
-    Config?: { Env?: string[] }
-  }>
+    .map((line) => JSON.parse(line) as { Name: string; Env: string[] | null })
 
   for (const container of containers) {
-    const name = (container.Name ?? '').replace(/^\//, '')
+    const name = container.Name.replace(/^\//, '')
     if (!name) continue
     if (name === 'nginx-proxy') proxyRunning = true
 
-    const env = parseEnvArray(container.Config?.Env)
+    const env = parseEnvArray(container.Env ?? undefined)
     const virtualHost = env['VIRTUAL_HOST']
     if (!virtualHost) continue
 
