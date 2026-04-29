@@ -1,0 +1,15 @@
+services:
+  mailpit:
+    image: marlonb/mailcrab
+    profiles:
+      - mail
+    container_name: mail
+    restart: unless-stopped
+    ports:
+      - 1025:1025  # SMTP for apps on host
+    environment:
+      VIRTUAL_HOST: mail${DOMAIN:-.dev.test}
+      VIRTUAL_PORT: 1080
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
